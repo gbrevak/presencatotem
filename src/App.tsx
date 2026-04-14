@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './App.css'
 
 type Theme = 'light' | 'dark'
@@ -86,10 +86,23 @@ function App() {
   const [currentScreen, setCurrentScreen] = useState<'home' | 'detail'>('home')
   const [transitionDirection, setTransitionDirection] = useState<'forward' | 'back'>('forward')
   const [idleSecondsLeft, setIdleSecondsLeft] = useState(idleTimeoutSeconds)
+  const [platformScale, setPlatformScale] = useState(1)
+  const platformWrapRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme
   }, [theme])
+
+  useEffect(() => {
+    if (activeMenu !== 'Plataforma') return
+    const el = platformWrapRef.current
+    if (!el) return
+    const update = () => setPlatformScale(el.clientWidth / 1280)
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [activeMenu])
 
   useEffect(() => {
     if (activeMenu !== 'Depoimentos' || testimonialImages.length === 0) {
@@ -479,16 +492,23 @@ function App() {
                   </div>
                 ) : activeMenu === 'Plataforma' ? (
                   <div className="platform-shell">
-                    <p className="platform-help">
-                      Navegacao embutida na propria tela do totem. Se o portal bloquear iframe, use o botao de abrir externamente.
-                    </p>
-                    <div className="platform-frame-wrap glass-card">
+                    <div
+                      className="platform-frame-wrap glass-card"
+                      ref={platformWrapRef}
+                      style={{ height: `${Math.round(800 * platformScale)}px` }}
+                    >
                       <iframe
                         className="platform-frame"
                         src="https://portal.soupresenca.com.br"
                         title="Portal Sou Presenca"
                         loading="lazy"
                         referrerPolicy="strict-origin-when-cross-origin"
+                        style={{
+                          width: '1280px',
+                          height: '800px',
+                          transform: `scale(${platformScale})`,
+                          transformOrigin: 'top left',
+                        }}
                       />
                     </div>
                     <button
