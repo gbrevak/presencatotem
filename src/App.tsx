@@ -460,6 +460,7 @@ function App() {
                     />
                   ))}
                 </article>
+                <p className="story-touch-hint">Toque na esquerda para voltar · direita para avançar</p>
               </section>
             </section>
           </section>
