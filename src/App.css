@@ -710,6 +710,18 @@
   border-color: rgba(128, 73, 38, 0.12);
 }
 
+:root[data-theme='light'] .portfolio-option {
+  border: 1px solid rgba(200, 90, 0, 0.35);
+  background: linear-gradient(180deg, rgba(255, 120, 0, 0.14), rgba(255, 90, 0, 0.06));
+  color: rgba(140, 50, 0, 1);
+}
+
+:root[data-theme='light'] .portfolio-option:hover,
+:root[data-theme='light'] .portfolio-option:focus-visible {
+  border-color: rgba(200, 90, 0, 0.65);
+  background: linear-gradient(180deg, rgba(255, 110, 0, 0.26), rgba(255, 90, 0, 0.12));
+}
+
 .menu-card strong {
   display: block;
   margin-bottom: 0.75rem;
@@ -912,6 +924,7 @@
   object-fit: contain;
   object-position: center;
   background: rgba(0, 0, 0, 0.22);
+  animation: img-fade-in 380ms ease;
 }
 
 .story-touch-zone {
@@ -1078,7 +1091,6 @@
   align-items: center;
   justify-content: center;
   min-height: 0;
-  animation: fade-slide 280ms ease;
 }
 
 .home-carousel-media {
@@ -1092,6 +1104,7 @@
   background: rgba(0, 0, 0, 0.24);
   object-fit: contain;
   object-position: center;
+  animation: img-fade-in 380ms ease;
 }
 
 .placeholder-pills {
@@ -1188,6 +1201,11 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@keyframes img-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 @keyframes drift-b {

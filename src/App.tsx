@@ -105,25 +105,28 @@ function App() {
   }, [activeMenu])
 
   useEffect(() => {
-    if (activeMenu !== 'Depoimentos' || testimonialImages.length === 0) {
+    if (currentScreen !== 'detail' || activeMenu !== 'Depoimentos' || testimonialImages.length === 0) {
       return undefined
     }
 
-    const intervalId = window.setInterval(() => {
-      setStoryProgress((currentProgress) => {
-        if (currentProgress >= 100) {
-          setActiveStory((currentStory) => (currentStory + 1) % testimonialImages.length)
-          return 0
-        }
+    let progress = 0
 
-        return Math.min(currentProgress + storyStep, 100)
-      })
+    const intervalId = window.setInterval(() => {
+      progress = Math.min(progress + storyStep, 100)
+
+      if (progress >= 100) {
+        progress = 0
+        setStoryProgress(0)
+        setActiveStory((currentStory) => (currentStory + 1) % testimonialImages.length)
+      } else {
+        setStoryProgress(progress)
+      }
     }, storyTickMs)
 
     return () => {
       window.clearInterval(intervalId)
     }
-  }, [activeMenu, activeStory])
+  }, [activeMenu, currentScreen, activeStory])
 
   useEffect(() => {
     if (currentScreen !== 'home' || homeSlideImages.length === 0) {
@@ -353,6 +356,7 @@ function App() {
                 <svg viewBox="0 0 24 24" role="presentation">
                   <path d="M14.25 3.5a8.75 8.75 0 1 0 6.25 15.58A9.5 9.5 0 1 1 14.25 3.5Z" />
                 </svg>
+
               </span>
             </span>
           </button>
@@ -381,7 +385,7 @@ function App() {
                   })}
                 </div>
 
-                <article className="home-carousel-slide" key={`home-slide-${activeHomeSlide}`}>
+                <article className="home-carousel-slide">
                   <button
                     type="button"
                     className="story-touch-zone story-touch-zone-left"
@@ -397,10 +401,11 @@ function App() {
 
                   {homeSlideImages.length > 0 ? (
                     <img
+                      key={`home-slide-${activeHomeSlide}`}
                       className="home-carousel-media"
                       src={homeSlideImages[activeHomeSlide]}
                       alt={`Banner de destaque ${activeHomeSlide + 1}`}
-                      loading="lazy"
+                      loading="eager"
                     />
                   ) : (
                     <p>Nenhuma imagem encontrada em assets/home-carrossel.</p>
@@ -457,10 +462,11 @@ function App() {
 
                       {testimonialImages.length > 0 ? (
                         <img
+                          key={`story-img-${activeStory}`}
                           className="story-image"
                           src={testimonialImages[activeStory]}
                           alt={`Depoimento ${activeStory + 1}`}
-                          loading="lazy"
+                          loading="eager"
                         />
                       ) : (
                         <p className="panel-note">Nenhuma imagem encontrada em assets/depoimentos.</p>
