@@ -70,6 +70,15 @@ const homeSlideImages = Object.entries(
   .sort(([fileA], [fileB]) => fileA.localeCompare(fileB, undefined, { numeric: true }))
   .map(([, filePath]) => filePath)
 
+const techImages = Object.entries(
+  import.meta.glob('./assets/tech-carrossel/*.jpg', { eager: true, import: 'default' }) as Record<
+    string,
+    string
+  >,
+)
+  .sort(([fileA], [fileB]) => fileA.localeCompare(fileB, undefined, { numeric: true }))
+  .map(([, filePath]) => filePath)
+
 const storyDurationMs = 5200
 const storyTickMs = 80
 const storyStep = 100 / (storyDurationMs / storyTickMs)
@@ -82,6 +91,8 @@ function App() {
   const [storyProgress, setStoryProgress] = useState(0)
   const [activeHomeSlide, setActiveHomeSlide] = useState(0)
   const [homeSlideProgress, setHomeSlideProgress] = useState(0)
+  const [activeTechSlide, setActiveTechSlide] = useState(0)
+  const [techSlideProgress, setTechSlideProgress] = useState(0)
   const [isMenuExpanded, setIsMenuExpanded] = useState(false)
   const [currentScreen, setCurrentScreen] = useState<'home' | 'detail'>('home')
   const [transitionDirection, setTransitionDirection] = useState<'forward' | 'back'>('forward')
@@ -127,6 +138,30 @@ function App() {
       window.clearInterval(intervalId)
     }
   }, [activeMenu, currentScreen, activeStory])
+
+  useEffect(() => {
+    if (currentScreen !== 'detail' || activeMenu !== 'Tecnologias' || techImages.length === 0) {
+      return undefined
+    }
+
+    let progress = 0
+
+    const intervalId = window.setInterval(() => {
+      progress = Math.min(progress + storyStep, 100)
+
+      if (progress >= 100) {
+        progress = 0
+        setTechSlideProgress(0)
+        setActiveTechSlide((current) => (current + 1) % techImages.length)
+      } else {
+        setTechSlideProgress(progress)
+      }
+    }, storyTickMs)
+
+    return () => {
+      window.clearInterval(intervalId)
+    }
+  }, [activeMenu, currentScreen, activeTechSlide])
 
   useEffect(() => {
     if (currentScreen !== 'home' || homeSlideImages.length === 0) {
@@ -193,6 +228,10 @@ function App() {
       setActiveStory(0)
       setStoryProgress(0)
     }
+    if (menuId === 'Tecnologias') {
+      setActiveTechSlide(0)
+      setTechSlideProgress(0)
+    }
   }
 
   function goBackToHome() {
@@ -226,6 +265,18 @@ function App() {
 
   function keepSessionAlive() {
     setIdleSecondsLeft(idleTimeoutSeconds)
+  }
+
+  function showPreviousTechSlide() {
+    setTechSlideProgress(0)
+    setActiveTechSlide((current) =>
+      current === 0 ? techImages.length - 1 : current - 1,
+    )
+  }
+
+  function showNextTechSlide() {
+    setTechSlideProgress(0)
+    setActiveTechSlide((current) => (current + 1) % techImages.length)
   }
 
   function renderMenuIcon(menuId: MenuId) {
@@ -399,17 +450,15 @@ function App() {
                     aria-label="Avancar banner"
                   />
 
-                  {homeSlideImages.length > 0 ? (
+                  {homeSlideImages.map((src, index) => (
                     <img
-                      key={`home-slide-${activeHomeSlide}`}
-                      className="home-carousel-media"
-                      src={homeSlideImages[activeHomeSlide]}
-                      alt={`Banner de destaque ${activeHomeSlide + 1}`}
+                      key={src}
+                      className={`home-carousel-media${index === activeHomeSlide ? ' is-active' : ''}`}
+                      src={src}
+                      alt={`Banner de destaque ${index + 1}`}
                       loading="eager"
                     />
-                  ) : (
-                    <p>Nenhuma imagem encontrada em assets/home-carrossel.</p>
-                  )}
+                  ))}
                 </article>
               </section>
             </section>
@@ -461,30 +510,21 @@ function App() {
                       />
 
                       {testimonialImages.length > 0 ? (
-                        <img
-                          key={`story-img-${activeStory}`}
-                          className="story-image"
-                          src={testimonialImages[activeStory]}
-                          alt={`Depoimento ${activeStory + 1}`}
-                          loading="eager"
-                        />
+                        testimonialImages.map((src, index) => (
+                          <img
+                            key={src}
+                            className={`story-image${index === activeStory ? ' is-active' : ''}`}
+                            src={src}
+                            alt={`Depoimento ${index + 1}`}
+                            loading="eager"
+                          />
+                        ))
                       ) : (
                         <p className="panel-note">Nenhuma imagem encontrada em assets/depoimentos.</p>
                       )}
-
-                      <div className="story-actions">
-                        <button type="button" className="ghost-button" onClick={showPreviousStory}>
-                          Anterior
-                        </button>
-                        <button type="button" className="primary-button" onClick={showNextStory}>
-                          Proximo
-                        </button>
-                      </div>
                     </div>
 
-                    <p className="panel-note">
-                      Toque nas laterais ou use os botoes para avançar.
-                    </p>
+                    <p className="story-touch-hint">Toque na esquerda para voltar · direita para avançar</p>
                   </div>
                 ) : activeMenu === 'Portfolio' ? (
                   <div className="portfolio-shell">
@@ -525,6 +565,46 @@ function App() {
                       Abrir em nova janela
                     </button>
                   </div>
+                ) : activeMenu === 'Tecnologias' ? (
+                  <div className="stories-module">
+                    <div className="story-progress" aria-hidden="true">
+                      {techImages.map((_, index) => {
+                        const width =
+                          index < activeTechSlide ? 100 : index === activeTechSlide ? techSlideProgress : 0
+                        return (
+                          <span key={`tech-progress-${index}`} className="story-progress-track">
+                            <span className="story-progress-fill" style={{ width: `${width}%` }} />
+                          </span>
+                        )
+                      })}
+                    </div>
+
+                    <div className="story-card glass-card">
+                      <button
+                        type="button"
+                        className="story-touch-zone story-touch-zone-left"
+                        onClick={showPreviousTechSlide}
+                        aria-label="Voltar slide"
+                      />
+                      <button
+                        type="button"
+                        className="story-touch-zone story-touch-zone-right"
+                        onClick={showNextTechSlide}
+                        aria-label="Avancar slide"
+                      />
+                      {techImages.map((src, index) => (
+                        <img
+                          key={src}
+                          className={`story-image${index === activeTechSlide ? ' is-active' : ''}`}
+                          src={src}
+                          alt={`Tecnologia ${index + 1}`}
+                          loading="eager"
+                        />
+                      ))}
+                    </div>
+
+                    <p className="story-touch-hint">Toque na esquerda para voltar · direita para avançar</p>
+                  </div>
                 ) : (
                   <div className="placeholder-stack">
                     <p>Espaco reservado para o submenu e o conteudo que voce vai me passar depois.</p>
@@ -535,14 +615,18 @@ function App() {
             </section>
 
             {shouldShowIdlePopup ? (
-              <div className="idle-popup" role="dialog" aria-live="assertive" aria-label="Aviso de inatividade">
-                <p>
-                  Inativo ha 1 minuto. Voltando ao menu em <strong>{idleClock}</strong>.
-                </p>
-                <button type="button" className="idle-popup-button" onClick={keepSessionAlive}>
-                  Ainda estou aqui
-                </button>
-              </div>
+              <>
+                <div className="idle-overlay" aria-hidden="true" />
+                <div className="idle-popup" role="dialog" aria-live="assertive" aria-label="Aviso de inatividade">
+                  <p className="idle-popup-title">Ainda está aí?</p>
+                  <p className="idle-popup-body">
+                    Voltando ao menu em <strong>{idleClock}</strong>.
+                  </p>
+                  <button type="button" className="idle-popup-button" onClick={keepSessionAlive}>
+                    Ainda estou aqui
+                  </button>
+                </div>
+              </>
             ) : null}
           </section>
         )}
